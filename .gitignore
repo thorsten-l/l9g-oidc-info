@@ -1,0 +1,9 @@
+.DS_Store
+private/
+target/
+*.log
+*.tmp
+*.bak
+config.yaml
+server.p12
+nb-configuration.xml
