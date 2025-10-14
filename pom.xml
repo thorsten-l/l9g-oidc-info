@@ -50,7 +50,7 @@
     <build.profile>default</build.profile>
     <exec.inheritIo>true</exec.inheritIo>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <start-class>l9g.app1service.Application</start-class>
+    <start-class>l9g.oidc.info.Application</start-class>
   </properties>
   
   <dependencies>

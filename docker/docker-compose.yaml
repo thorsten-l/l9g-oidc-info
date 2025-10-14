@@ -1,7 +1,7 @@
 services:
  
   app1-service:
-    image: l9g-oidc-info:latest
+    image: ghcr.io/thorsten-l/l9g-oidc-info:latest
     container_name: l9g-oidc-info
     hostname: app1-service.dev.sonia.de
     restart: unless-stopped
