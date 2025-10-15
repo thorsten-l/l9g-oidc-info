@@ -18,6 +18,7 @@ package l9g.oidc.info.config;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collection;
+import l9g.oidc.info.service.SessionStoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -51,6 +52,7 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 public class ClientSecurityConfig
 {
   private final AppAuthoritiesConverter appAuthoritiesConverter;
+  private final LoginSuccessHandler loginSuccessHandler;
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http,
@@ -75,7 +77,8 @@ public class ClientSecurityConfig
         // allow all
         .requestMatchers("/", "/error/**", "/api/v1/buildinfo",
           "/webjars/**", "/icons/**", "/css/**", "/js/**", "/images/**",
-          "/actuator/**", "/flags/**", "/logout").permitAll()
+          "/actuator/**", "/flags/**", "/logout", "/oidc-backchannel-logout")
+        .permitAll()
         .anyRequest()
         .authenticated()
     )
@@ -90,7 +93,8 @@ public class ClientSecurityConfig
               .authorizationRequestResolver(resolver))
           .userInfoEndpoint(userInfo -> userInfo
           .oidcUserService(this.oidcUserService())
-          ))
+          )
+          .successHandler(loginSuccessHandler))
       .oauth2Client(withDefaults())
       .logout(
         logout -> logout
@@ -98,9 +102,9 @@ public class ClientSecurityConfig
           .addLogoutHandler(invalidateCacheLogoutHandler())
           .logoutSuccessHandler(
             oidcLogoutSuccessHandler(clientRegistrationRepository))
-      );
+      )
     // permit even POST, PUT and DELETE requests
-    // .csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/admin/**"));
+    .csrf(csrf -> csrf.ignoringRequestMatchers("/oidc-backchannel-logout"));
 
     return http.build();
   }

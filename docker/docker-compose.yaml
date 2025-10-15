@@ -1,7 +1,7 @@
 services:
  
   fop-app1-service:
-    image: ghcr.io/thorsten-l/l9g-oidc-info:latest
+    image: l9g-oidc-info:latest
     container_name: fop-app1-service
     hostname: app1-service.dev.sonia.de
     restart: unless-stopped

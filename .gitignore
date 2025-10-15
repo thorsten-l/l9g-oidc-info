@@ -8,3 +8,4 @@ config.yaml
 server.p12
 nb-configuration.xml
 docker/l9g-oidc-info.jar
+GEMINI.md
