@@ -15,6 +15,7 @@
  */
 package l9g.oidc.info;
 
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -65,10 +66,20 @@ public class GlobalExceptionHandler
       Exception.class, org.thymeleaf.exceptions.TemplateInputException.class
     })
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  public ModelAndView handleException(HttpServletRequest request, Exception ex)
+  public ModelAndView handleException(HttpServletRequest request, Exception ex) 
   {
     log.debug("request={} exception={}", request, ex);
 
+    try
+    {
+      log.debug("SESSION: logout!");
+      request.logout();
+    }
+    catch(ServletException ex1)
+    {
+      log.warn("LOGOUT failed : {}", ex1.getMessage());
+    }
+    
     ModelAndView modelAndView = new ModelAndView("error/500");
     modelAndView.addObject("pageErrorRequestUri", request.getRequestURI());
     modelAndView.addObject("pageErrorException", ex.getMessage());

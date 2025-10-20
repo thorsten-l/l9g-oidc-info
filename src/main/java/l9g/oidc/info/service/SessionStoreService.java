@@ -15,9 +15,12 @@
  */
 package l9g.oidc.info.service;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import jakarta.annotation.PreDestroy;
 import jakarta.servlet.http.HttpSession;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.time.Duration;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -27,23 +30,82 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Slf4j
-public class SessionStoreService
+public final class SessionStoreService
 {
-  private final Map<String, HttpSession> sessionMap = new ConcurrentHashMap<>();
+
+  private static final Duration CACHE_TTL = Duration.ofHours(8);
+
+  private final Cache<String, HttpSession> byOauth2SidCache;
+
+  private final Cache<String, HttpSession> byHttpSessionIdCache;
+
+  public SessionStoreService()
+  {
+    this.byOauth2SidCache = Caffeine.newBuilder()
+      .expireAfterWrite(CACHE_TTL)
+      .build();
+
+    this.byHttpSessionIdCache = Caffeine.newBuilder()
+      .expireAfterWrite(CACHE_TTL)
+      .build();
+  }
 
   public void put(String sid, HttpSession session)
   {
-    sessionMap.put(sid, session);
+    Objects.requireNonNull(sid, "sid must not be null");
+    Objects.requireNonNull(session, "session must not be null");
+
+    byOauth2SidCache.put(sid, session);
+    byHttpSessionIdCache.put(session.getId(), session);
   }
 
-  public HttpSession get(String sid)
+  public HttpSession getByOAuth2Sid(String sid)
   {
-    return sessionMap.get(sid);
+    return byOauth2SidCache.getIfPresent(sid);
+  }
+
+  public HttpSession getByHttpSessionId(String sessionId)
+  {
+    return byHttpSessionIdCache.getIfPresent(sessionId);
   }
 
   public void remove(String sid)
   {
-    sessionMap.remove(sid);
+    var session = byOauth2SidCache.getIfPresent(sid);
+    if(session != null)
+    {
+      byHttpSessionIdCache.invalidate(session.getId());
+    }
+    byOauth2SidCache.invalidate(sid);
+  }
+
+  public void invalidateByOAuth2Sid(String sid)
+  {
+    Objects.requireNonNull(sid, "sid must not be null");
+    HttpSession session = getByOAuth2Sid(sid);
+    
+    if(session != null)
+    {
+      log.debug("invalidate http session id {}", session.getId());
+      try
+      {
+        session.invalidate();
+      }
+      catch(Throwable t)
+      {
+        // is fine
+      }
+      remove(sid);
+    }
+  }
+
+  @PreDestroy
+  public void shutdown()
+  {
+    byOauth2SidCache.invalidateAll();
+    byHttpSessionIdCache.invalidateAll();
+    byOauth2SidCache.cleanUp();
+    byHttpSessionIdCache.cleanUp();
   }
 
 }

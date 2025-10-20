@@ -15,7 +15,6 @@
  */
 package l9g.oidc.info.controller;
 
-import jakarta.servlet.http.HttpSession;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,28 +47,7 @@ public class BackchannelLogoutController
     log.debug("handleBackchannelLogout {}", logoutToken);
     Map<String, String> jwt = jwtService.decodeJwtPayload(logoutToken);
     log.debug("jwt {}", jwt);
-
-    String sid = jwt.get("sid");
-
-    if(sid != null)
-    {
-      HttpSession session = sessionStore.get(sid);
-      if(session != null)
-      {
-        log.debug("invalidate http session id {}", session.getId());
-        try
-        {
-          session.invalidate();
-        }
-        catch(Throwable t)
-        {
-          // is fine
-        }
-        sessionStore.remove(sid);
-
-      }
-    }
-
+    sessionStore.invalidateByOAuth2Sid(jwt.get("sid"));
     return ResponseEntity.ok().build();
   }
 

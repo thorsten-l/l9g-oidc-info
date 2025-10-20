@@ -18,7 +18,6 @@ package l9g.oidc.info.config;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collection;
-import l9g.oidc.info.service.SessionStoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -52,6 +51,7 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 public class ClientSecurityConfig
 {
   private final AppAuthoritiesConverter appAuthoritiesConverter;
+
   private final LoginSuccessHandler loginSuccessHandler;
 
   @Bean
@@ -103,8 +103,8 @@ public class ClientSecurityConfig
           .logoutSuccessHandler(
             oidcLogoutSuccessHandler(clientRegistrationRepository))
       )
-    // permit even POST, PUT and DELETE requests
-    .csrf(csrf -> csrf.ignoringRequestMatchers("/oidc-backchannel-logout"));
+      // permit even POST, PUT and DELETE requests
+      .csrf(csrf -> csrf.ignoringRequestMatchers("/oidc-backchannel-logout"));
 
     return http.build();
   }
