@@ -1,5 +1,8 @@
 #!/bin/bash
 
+( cd ..; mvn clean package  )
+cp ../target/l9g-oidc-info.jar .
+
 TAGS=""
 
 while (( $# )); do
